@@ -2,7 +2,7 @@
 
 This repository is the device-side companion to `wong001110/character-relay`.
 
-Current repository status: **planning / pre-implementation**.
+Current repository status: **planning / Phase 0 contract freeze**.
 
 Do not turn roadmap text into claimed implementation. Do not create speculative package scaffolding, empty modules, fake test success, or placeholder runtime behavior unless the owner explicitly starts an implementation phase.
 
@@ -12,32 +12,71 @@ Read in this order:
 
 1. this file;
 2. `README.md`;
-3. `ROADMAP.md`;
-4. the current `wong001110/character-relay` repository `AGENTS.md` and task-relevant current contracts/source/tests;
-5. the active branch plan when implementation has begun and that plan explicitly names the current branch.
+3. `docs/phase-0-contract-freeze.md`;
+4. `docs/contracts/README.md` and the task-relevant Phase 0 contracts;
+5. `ROADMAP.md`;
+6. the current `wong001110/character-relay` repository `AGENTS.md` and task-relevant current contracts/source/tests;
+7. the active branch plan when implementation has begun and that plan explicitly names the current branch.
 
 Chat history and roadmap prose are intent/evidence, not proof of current source behavior.
 
 ## Cross-repository authority
 
-`character-relay` owns cloud/product authority, including Character Card, Deployment, Presence, durable memory/evidence, owner authorization, and Portal behavior.
+`character-relay` owns cloud/product authority, including Character Card, Deployment, Presence, durable memory/evidence, owner authorization, Portal behavior, Device access policy, and cloud-side autonomy admission.
 
-`character-relay-local` owns device-side execution, including local connection/runtime, capture, input, streaming, Plugin SDK/Host, Adapter Lab, local Runtime Agent providers, and Coding Agent integrations.
+`character-relay-local` owns device-side execution, including local connection/runtime, capture, input, streaming, Plugin SDK/Host, Adapter Lab, Local safety enforcement, local Runtime Agent providers, Coding Agent integrations, and the versioned Device Protocol source.
 
-Do not duplicate a Cloud ↔ Local protocol contract independently in both repositories. When implementation begins, establish one versioned schema authority and generate/import consumers from that authority.
+Do not duplicate a Cloud ↔ Local protocol contract independently in both repositories. The accepted v1 direction uses one TypeSpec source under `character-relay-local`, generated JSON Schema/conformance artifacts, and consumers in Local TypeScript and Character Relay Cloud Python/Pydantic.
 
 ## Critical invariants
 
 - Local device connections are outbound by default. Do not require public inbound ports for normal operation.
 - Do not expose a local MCP server directly to the public Internet.
 - MCP is for tools/capabilities; WebRTC is for live media; WSS/HTTPS is for cloud control/telemetry.
+- Device Protocol is standard versioned JSON over WSS; do not make Socket.IO protocol a platform dependency.
 - Character lived state remains scoped according to the current Character Relay Deployment/runtime contracts. Do not create Character-global consciousness through Local session data.
-- Model/agent intent never outranks owner, device, plugin, or session permissions.
-- Do not treat `gaming` as an already-implemented Presence enum until the main repository contract/source explicitly says so.
-- Persist only verified local outcomes as lived evidence. Do not manufacture game/activity completion from model narration.
+- Devices are owner-scoped; execution authorization resolves to concrete Deployment/session scope.
+- Model/agent intent never outranks owner, device, autonomy, plugin, risk, lease, or Local safety permissions.
+- Gaming is rich activity under availability Presence (`busy` + `activity.kind=gaming` direction), not a new already-implemented Presence enum.
+- Persist only verified local outcomes as lived evidence. Do not manufacture game/activity completion from model narration, SHADOW intents, REVIEW proposals, or deferred desires.
 - Plugins/adapters must not receive unrestricted desktop authority merely because they can be called by MCP.
+- V1 Official and Developer plugins are trusted executable code; do not describe Host Capability permissions as a complete OS sandbox. Verified/untrusted public plugins are deferred until a real sandbox exists.
 - Never implement anti-cheat bypass, process-memory injection, packet interception, credential extraction, or game-client tampering as Character Relay platform behavior.
-- Never persist secrets, provider credentials, login state, or unrelated private desktop content in traces/fixtures.
+- Never persist secrets, provider credentials, login state, unrelated private desktop content, or private model chain-of-thought in traces/fixtures.
+
+## Autonomy and shared-device authority
+
+Read `docs/contracts/autonomy-policy-v1.md` before changing autonomous execution.
+
+Canonical Local action origins:
+
+```text
+user_request
+user_delegated
+session_recovery
+character_initiated
+```
+
+Resource conflict priority:
+
+```text
+user_request
+  > user_delegated
+  > session_recovery
+  > character_initiated
+```
+
+Runtime/Policy rules:
+
+- `OFF`, `SHADOW`, `REVIEW`, and `AUTO` are distinct autonomy modes.
+- Sleep is a hard gate for Character-initiated activity.
+- Activity `allowed` windows are hard admission windows; `preferred` windows are soft opportunity preferences.
+- Character-initiated intents expire; do not create permanent offline/busy queues.
+- Resource arbitration is deterministic, not LLM-decided.
+- A competing valid intent is normally deferred rather than silently stealing an exclusive lease.
+- Higher-priority work uses cooperative preemption at adapter-declared safe checkpoints where possible.
+- Human Stop/Take Over and Local safety may interrupt immediately and may create autonomy suppression.
+- R3 sensitive/irreversible actions are never ordinary AUTO in v1.
 
 ## Core vs Plugin rule
 
@@ -67,7 +106,7 @@ Do not expose or persist private model chain-of-thought. Record action summaries
 ## Development workflow when implementation is explicitly started
 
 1. Re-read current `character-relay` `main`; do not assume the roadmap still matches current Presence/Portal/runtime types.
-2. Start with `ROADMAP.md` Phase 0 contract freeze.
+2. Start from accepted Phase 0 contracts, not chat memory.
 3. Create a feature branch and a branch-local active development plan naming that branch.
 4. Implement phase-by-phase, with one coherent ownership boundary per phase.
 5. Add tests with each implemented contract.
@@ -89,7 +128,7 @@ A coding agent may run and report these gates, but must not mark a gate passed w
 ## Scope discipline
 
 - Prefer the smallest accepted phase over broad refactors.
-- Do not build cloud runners, plugin marketplace, multi-OS parity, or generic unrestricted desktop control during the Local MVP unless the roadmap is explicitly reprioritized.
+- Do not build cloud runners, plugin marketplace, multi-OS parity, SFU/LiveKit, or generic unrestricted desktop control during the Local MVP unless the roadmap is explicitly reprioritized.
 - Do not add a closed commercial game as the first architecture proof; use an owned/test/API-friendly environment first.
 - Keep first-party adapters plugin-compatible even if they initially live in this monorepo.
 - Do not create empty directories only to match the target repository diagram.
