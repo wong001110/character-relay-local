@@ -55,19 +55,52 @@ live Portal viewing          shared-read media subscription only
 
 A session cannot call a Host Capability merely because the plugin exposes an MCP tool. The required lease must exist and match the authorized target.
 
-## 4. Lease ownership and priority
+## 4. Lease ownership and authority
 
 Authority order:
 
 1. explicit human Stop / Take Over;
 2. Local safety/permission policy;
-3. cloud-authorized session policy;
+3. cloud-authorized session/autonomy policy;
 4. Runtime Agent / deterministic skill intent;
 5. plugin implementation request.
 
 A lower layer cannot override a higher denial.
 
-Leases are not silently preempted by another Character. If an exclusive resource is held, a competing session receives an explicit busy/denied result unless the owner performs a takeover or an accepted policy explicitly moves the lease.
+Leases are never silently stolen by another Character. Resource contention is arbitrated by the deterministic Resource Scheduler defined in [`autonomy-policy-v1.md`](autonomy-policy-v1.md).
+
+A valid competing intent may be:
+
+- admitted immediately when required resources are free;
+- deferred while its validity window remains open;
+- expired when its validity window closes;
+- cooperatively preempted at a safe checkpoint when a higher-priority accepted intent requires the same exclusive resource;
+- denied when policy, permission, risk, or safety does not permit execution.
+
+Contention is not itself proof that an intent is forbidden. Likewise, priority does not grant permission that the intent did not already have.
+
+### 4.1 Canonical origin priority for conflicting resources
+
+When two otherwise-valid intents require the same exclusive resource, scheduler priority is:
+
+```text
+user_request
+  > user_delegated (within its explicit valid window)
+  > session_recovery
+  > character_initiated
+```
+
+Within one priority class, implementation may consider age, explicit deadline, and deterministic fairness/recent-device-usage weighting. LLM output is not the arbitration authority.
+
+### 4.2 Cooperative preemption
+
+Higher priority does not normally mean arbitrary hard interruption.
+
+If the current session cannot safely release an exclusive lease immediately, Runtime requests preemption and waits for the adapter/skill to report the next safe checkpoint. At that checkpoint the current session pauses or stops, releases the resource, and the higher-priority session may acquire it.
+
+Immediate hard interruption is reserved for explicit human Stop/Take Over, Local safety/security enforcement, permission revocation, or equivalent emergency conditions.
+
+Adapters that contain non-trivial atomic operations should expose bounded preemptibility/safe-checkpoint information rather than forcing the scheduler to infer it.
 
 ## 5. Session state machine
 
@@ -93,6 +126,8 @@ Semantics:
 - `stopping` — safe teardown is in progress.
 - terminal states release execution leases and stop side effects.
 
+A deferred autonomy/delegated intent is **not yet an Execution Session** merely because it is waiting for a lease. The Cloud scheduler may keep it as a bounded pending intent until admitted or expired.
+
 Terminal states are immutable for that `session_id`.
 
 ## 6. Operation boundary
@@ -115,6 +150,8 @@ The adapter/runtime must distinguish:
 
 Only observed/verified completion can be emitted as a successful operation result.
 
+For preemptible workflows, an operation/skill may additionally report whether it can pause/stop safely now and the next known safe checkpoint. This is execution evidence, not model reasoning.
+
 ## 7. Human takeover
 
 The Local GUI must always provide an accessible local emergency path once input/control exists:
@@ -130,6 +167,7 @@ Human takeover:
 - prevents new autonomous side effects immediately;
 - transitions the session to `paused` or `stopping` according to the chosen action;
 - disarms autonomous input authority;
+- may create a bounded autonomy suppression under the Cloud Autonomy Policy so the same Character does not instantly recreate the stopped activity;
 - cannot be reversed remotely without a new local/session authorization boundary.
 
 A Portal live viewer is read-only by default. Remote takeover/control is a separate future permission and is not part of v1.
@@ -158,10 +196,13 @@ Local reports active sessions, operations, and leases. Cloud reconciles Deployme
 
 - owner/device authorization is still valid;
 - Deployment binding is still valid;
+- original session/recovery authority is still valid;
 - plugin/version is still compatible;
 - required permissions are still granted;
 - required leases are still valid/reacquirable;
 - Local safety policy permits continuation.
+
+A `session_recovery` intent competes for resources under the Autonomy Policy scheduler. Reconnection does not silently preempt a higher-priority explicit user request.
 
 Otherwise the session stops safely.
 
@@ -194,6 +235,8 @@ activity session_id: verified Local session
 
 Ending/interruption of the Local session must produce a cleanup event so Portal cannot remain stuck on Gaming.
 
+A pending/deferred Character intent does not make Presence `busy` and must not be presented as actual gameplay.
+
 ## 12. Evidence boundary
 
 A session result may include bounded structured evidence such as:
@@ -205,7 +248,7 @@ A session result may include bounded structured evidence such as:
 - interruption/failure reason codes;
 - sanitized adapter trace references.
 
-Do not promote raw desktop frames, credentials, unrelated window content, or model reasoning into durable Character evidence by default.
+Do not promote raw desktop frames, credentials, unrelated window content, model reasoning, shadow intents, review proposals, or deferred/expired desires into durable Character evidence by default.
 
 ## 13. Concurrency examples
 
@@ -217,11 +260,13 @@ Ning -> headless Minecraft adapter without desktop-input lease
 Zhi  -> ComfyUI API adapter
 ```
 
-Not allowed without explicit takeover/policy:
+Contended:
 
 ```text
 Ann  -> exclusive desktop-input
 Ning -> exclusive desktop-input
 ```
 
-The second request receives contention rather than silently stealing control.
+The second otherwise-valid intent is deferred/expired/preempted according to Autonomy Policy and safe-checkpoint rules rather than silently stealing control.
+
+A higher-priority explicit user request may cause cooperative preemption of a lower-priority autonomous session at a safe checkpoint. Human Stop/Take Over may interrupt immediately under local safety semantics.
