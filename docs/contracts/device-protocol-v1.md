@@ -36,6 +36,8 @@ Handshake must exchange:
 
 An incompatible peer fails closed with an explicit version-mismatch reason. It must not guess field semantics.
 
+Protocol major version is independent from the Character Relay Local application version. A Local release may support one or more protocol major versions according to its compatibility matrix.
+
 ## 3. Envelope
 
 Conceptual envelope:
@@ -157,6 +159,8 @@ Required properties:
 - explicit unpair/revoke path;
 - revocation prevents future WSS authentication.
 
+A Device is owner/account-scoped. Pairing a device does not permanently bind it to a Character. Character/Deployment use is granted through cloud Device Access Policy and bounded execution sessions.
+
 Exact cryptographic/key-storage implementation is deferred to Phase 1, provided these properties hold.
 
 ## 10. Authorization
@@ -169,8 +173,10 @@ Every side-effecting session/command is checked against:
 owner/account authorization
 + device authorization
 + Deployment binding
++ autonomy/admission policy when applicable
 + session policy
 + plugin capability/permission
++ action risk policy
 + Execution Lease
 + local safety policy
 ```
@@ -214,14 +220,34 @@ protocol.error
 
 The executable schema phase may refine names, but semantic responsibilities must remain separated.
 
+Autonomy opportunity, intent admission, risk, resource-scheduler, and fairness decisions are cloud-domain policy and are not granted by merely receiving a Device Protocol message. The protocol transports accepted session commands and resulting state/events.
+
 ## 12. WebRTC signaling
 
 WebRTC offer/answer/ICE signaling may be carried as bounded signaling payloads through the Device Protocol. Encoded video/audio frames never are.
 
-The Portal receives stream authorization from Cloud. Live viewing alone never grants input/control permission.
+Live Watch v1 uses direct WebRTC P2P where possible, with STUN discovery and TURN relay fallback. A future SFU transport may be introduced behind the same LiveStreamSession product contract without changing Device Protocol authority.
+
+The Portal receives stream authorization from Cloud. Live viewing alone never grants input/control permission. Portal Stop/session commands continue through the Cloud control plane rather than the P2P media channel.
 
 ## 13. Schema source of truth
 
-When implementation begins, machine-readable Device Protocol schemas live under one versioned authority in `character-relay-local` (planned protocol package/artifacts). Character Relay Cloud consumes the same versioned schema/artifact and must not maintain a semantically divergent duplicate.
+The executable v1 Device Protocol schema has one semantic source of truth in `character-relay-local`.
+
+Accepted pipeline:
+
+```text
+TypeSpec source
+  -> generated JSON Schema artifacts
+  -> shared valid/invalid conformance fixtures
+       -> Local TypeScript validation/types
+       -> Character Relay Cloud Python/Pydantic consumer
+```
+
+Do not create independent handwritten wire-schema authorities in Local and Cloud.
+
+The exact generated TypeScript/Pydantic helper library may be chosen during implementation, but both repositories must validate the same protocol artifacts/conformance cases.
 
 Cloud-domain IDs retain their meaning from the main `character-relay` contracts; this protocol only transports them.
+
+The Rust native sidecar does not need to implement the Cloud Device Protocol. Its Local runtime IPC is a separate internal boundary and may evolve independently while preserving the TypeScript Local runtime's Device Protocol behavior.
