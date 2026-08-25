@@ -18,12 +18,13 @@ Device connectivity
   -> Live Watch
   -> Plugin boundary
   -> Adapter Lab
-  -> deterministic control
+  -> deterministic control in owned test environment
+  -> routine-only commercial game adapters
   -> Character orchestration
   -> optional local/coding agents
 ```
 
-This ordering keeps network, media, input, plugin, and agent failures independently diagnosable.
+This ordering keeps network, media, input, plugin, game-policy, and agent failures independently diagnosable.
 
 ## Milestone A — Local device + live Presence
 
@@ -38,8 +39,11 @@ Define with the then-current Character Relay `main`:
 - Cloud ↔ Local protocol and versioning;
 - heartbeat, offline, reconnect, interruption, and resume semantics;
 - gaming/activity representation in existing Deployment Presence;
-- Local Autonomy Policy, Activity Rhythm, and risk/admission semantics;
+- Local Autonomy Policy, Activity Rhythm, human/device availability, and risk/admission semantics;
+- bounded Autonomy Context and verified outcome → memory/evidence boundary;
 - multi-Character Resource Scheduler, Execution Lease, contention, and safe preemption;
+- routine/repeatable game automation vs human-only experiential content;
+- first commercial adapter targets after the reference environment: Honkai: Star Rail and Genshin Impact;
 - live-view authorization and signaling contract;
 - plugin capability/permission/trust model;
 - security threat model and explicit non-goals;
@@ -51,7 +55,10 @@ Gate:
 - the cloud and local repositories reference the same accepted contracts;
 - no implementation depends on an invented `gaming` Presence state or unversioned event shape;
 - Character autonomy cannot bypass deterministic admission or Local safety;
+- autonomy cognition cannot receive unrestricted raw desktop/private context by default;
+- Local execution outcomes do not directly mutate Character personality/preferences;
 - multiple Characters cannot silently steal the same exclusive execution resource;
+- commercial game automation cannot cross from approved routine/farming work into story/event/first-time experiential content;
 - input, capture, streaming, and plugin permissions have explicit authority owners.
 
 ### Phase 1 — Desktop shell + device pairing
@@ -199,11 +206,15 @@ Milestone B acceptance:
 
 ## Milestone C — Deterministic environment control
 
-### Phase 6 — First real adapter
+### Phase 6 — Reference control + first commercial game adapters
 
-Start with an owned test environment, API/mod-friendly game, or otherwise low-risk target. Do **not** make a closed commercial game the first proof of the architecture.
+Do **not** make a closed commercial game the first proof of control architecture.
 
-Implement:
+#### Phase 6A — owned/reference control environment
+
+First prove deterministic side effects against an owned/test/API-friendly environment using the same Plugin/Host contracts intended for real adapters.
+
+Implement/validate:
 
 - target detection;
 - structured observation;
@@ -216,35 +227,67 @@ Implement:
 - high-frequency motor loop only where necessary;
 - timeout, cancel, failure, safe-checkpoint/preemption, and safe-stop behavior.
 
+Gate:
+
+- the same bounded task succeeds repeatedly;
+- expected states and outcomes are verified rather than assumed;
+- cancel/emergency stop and physical human takeover work during execution;
+- safe preemption checkpoints are observable;
+- plugin permissions/leases are enforced through the real Host boundary.
+
+#### Phase 6B — first commercial game adapters
+
+After 6A passes, build the first intended game adapters under [`docs/contracts/routine-game-automation-v1.md`](docs/contracts/routine-game-automation-v1.md):
+
+1. **Honkai: Star Rail** — validates menu/state-heavy, turn-based/repeatable routine automation;
+2. **Genshin Impact** — validates real-time 3D movement/visual control for already-approved repeatable routines.
+
+Both are deliberately scoped to owner-approved routine/maintenance/farming work. Story, events, first-time content, exploration, meaningful dialogue choices, gacha/premium currency, purchases, and equivalent experiential/sensitive content remain human-only.
+
+Initial vertical slice for each:
+
+```text
+detect authorized target
+  -> establish known routine state
+  -> choose one owner-approved routine/farming target
+  -> execute bounded repeatable loop
+  -> verify progress/result
+  -> return/stop at a known safe state
+```
+
 Preferred tool granularity:
 
 ```text
 GOOD
-run_skill("collect_reward")
-open_inventory()
-navigate_to(...)
+inspect_routine_status()
+run_configured_farming_loop(...)
+spend_stamina_on_configured_target(...)
+return_to_safe_state()
 
 NOT THE CLOUD DEFAULT
 mouse_click(x, y)
 press_key("W") every frame
 ```
 
-Gate:
+Gate for each commercial adapter:
 
-- the same bounded task succeeds repeatedly;
-- expected states and outcomes are verified rather than assumed;
-- cancel/emergency stop works during execution;
-- adapter exposes safe preemption checkpoints where the task cannot be interrupted arbitrarily;
-- adapter remains useful for Presence/Live Watch if control is disabled.
+- one narrow routine/farming vertical slice succeeds repeatedly in Adapter Lab;
+- exact outcomes are claimed only when observed/verified;
+- unknown/novel/event/story content stops/skips with a human-required reason;
+- cancel, focus-loss safety, physical takeover, and safe preemption work;
+- Presence/Live Watch remain useful even if control is disabled;
+- no anti-cheat bypass, memory injection, packet interception, credential extraction, or client tampering is introduced.
 
 ### Phase 7 — Character session execution
 
-Connect the proven adapter to Character Relay orchestration:
+Connect the proven adapters to Character Relay orchestration:
 
 - receive authorized high-level task;
 - bind task to device + Deployment/session;
-- apply Cloud Autonomy Policy/admission for Character-initiated work;
+- build bounded Autonomy Context for Character-initiated choices;
+- apply Cloud Autonomy Policy/admission;
 - acquire required Execution Leases through the deterministic Resource Scheduler;
+- choose only owner-approved Routine Catalog entries for game automation;
 - emit structured progress;
 - execute local high-level skill;
 - handle defer/cancel/interruption/resume and cooperative preemption;
@@ -257,12 +300,15 @@ Gate:
 - L3 validation passes;
 - Character-initiated intents outside allowed Activity Rhythm windows cannot start;
 - conflicting exclusive-resource intents are deferred/expired/preempted according to policy rather than silently stealing control;
+- autonomy context does not leak excluded local/private context;
+- verified game result enters cloud evidence only as bounded semantic outcome, not raw operation trace;
+- configured farming priority is not directly converted into Character preference;
 - the Character can later describe only verified events from the session;
 - Local cannot widen Deployment/owner scope.
 
 Milestone C acceptance:
 
-> A Character can execute one bounded real environment task through a local adapter while Portal Presence and Live Watch stay synchronized and the final outcome is objectively recorded.
+> A Character can execute one bounded owner-approved routine/farming task through a local adapter while Portal Presence and Live Watch stay synchronized, human-only game content remains untouched, and the final outcome is objectively recorded.
 
 ---
 
@@ -298,7 +344,7 @@ Gate:
 
 - enabling/disabling Local Agent does not change plugin contracts;
 - a task can fall back safely;
-- Local Agent cannot bypass plugin, autonomy, risk, lease, or input permissions.
+- Local Agent cannot bypass plugin, autonomy, risk, routine-content, lease, or input permissions.
 
 ### Phase 9 — Coding Agent providers
 
@@ -359,7 +405,7 @@ After the runtime/SDK contracts prove stable:
 - real sandbox requirement before introducing Verified/untrusted public plugins;
 - plugin SDK docs;
 - first-party adapter packaging independent from Local Core release;
-- commercial-game support matrix split into Presence / Integration / Visual Control.
+- commercial-game support matrix split into Presence / Live Watch / Routine Control.
 
 Gate:
 
@@ -369,12 +415,13 @@ Gate:
 
 ## Commercial game policy
 
-For games such as Genshin Impact or Honkai: Star Rail, support must be capability-specific rather than assumed:
+The first intended commercial adapters are Honkai: Star Rail and Genshin Impact, but support remains capability-specific rather than assumed:
 
 ```text
-Presence      potentially supported
-Live Watch    potentially supported
-Control       evaluate per target / rules / compatibility
+Presence          potentially supported
+Live Watch        potentially supported
+Routine Control   evaluate per target / rules / compatibility
+Story/Event Play  human-only in v1
 ```
 
 Character Relay Local must not implement anti-cheat bypass, memory injection, packet interception, credential extraction, or game-client tampering as platform features.
@@ -387,6 +434,8 @@ A commercial-game adapter may remain Presence/Live-only even when the rest of th
 - headless remote runner infrastructure;
 - simulation-only Game Runner;
 - generic unrestricted desktop agent;
+- broad autonomous game playthroughs;
+- event/story/first-time experiential game automation;
 - public plugin marketplace / Verified third-party plugins before real sandboxing;
 - automatic coding-agent merge/push;
 - direct cloud access to local MCP servers;
@@ -401,6 +450,7 @@ Development begins only after the owner explicitly promotes this repository into
 
 1. re-read Character Relay's current source/tests/contracts;
 2. reconcile any Presence/Portal/runtime changes;
-3. freeze Phase 0 contracts;
+3. use the accepted Phase 0 contracts as the implementation authority;
 4. create the actual project structure only as each phase needs it;
-5. use real validation evidence before advancing to the next phase.
+5. prove the reference environment before commercial-game control;
+6. use real validation evidence before advancing to the next phase.
