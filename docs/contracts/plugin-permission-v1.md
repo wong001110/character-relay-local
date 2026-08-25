@@ -34,7 +34,8 @@ Plugins own target-specific knowledge:
 - high-level skills;
 - target-specific deterministic state machines;
 - target-specific recovery logic;
-- optional target-specific CV/OCR/model orchestration.
+- optional target-specific CV/OCR/model orchestration;
+- safe-checkpoint/preemptibility reporting for long-running skills when needed.
 
 A Plugin does not become the owner of generic OS input/capture just because its adapter needs those capabilities.
 
@@ -96,6 +97,7 @@ plugin identity/version compatibility
 + requested manifest capability
 + owner permission grant
 + authorized target/session scope
++ cloud autonomy/risk/session policy when applicable
 + Execution Lease when side-effecting
 + Local safety policy
 ```
@@ -147,9 +149,11 @@ Adapter Lab manual input additionally requires an explicit time-bounded **Arm In
 
 A Plugin cannot ask the model to override these controls.
 
+A long-running input skill that cannot be interrupted safely at every instant should expose bounded safe-checkpoint/preemptibility state so the Resource Scheduler can cooperatively transfer an exclusive lease when higher-priority accepted work is waiting.
+
 ## 9. Trust levels
 
-Initial product trust levels:
+V1 user-visible trust levels:
 
 ### Official
 
@@ -157,11 +161,11 @@ Maintained/released by Character Relay. Official status does not remove permissi
 
 ### Developer
 
-Locally loaded development Plugin. The GUI must clearly state that Developer Plugins are user-trusted code and may not be OS-sandboxed. They are intended for adapter development/testing, not arbitrary untrusted distribution.
+Locally loaded development Plugin. The GUI must clearly state that Developer Plugins are user-trusted executable code and may not be OS-sandboxed. They are intended for adapter development/testing, not arbitrary untrusted distribution.
 
 ### Verified — deferred
 
-A future third-party distribution level. Do **not** advertise arbitrary third-party Plugins as safely permission-sandboxed until a real OS/process sandbox exists and has acceptance tests.
+A future third-party distribution level. Do **not** expose Verified as a v1 runtime trust choice and do not advertise arbitrary third-party Plugins as safely permission-sandboxed until a real OS/process sandbox exists and has acceptance tests.
 
 ## 10. Honest sandbox boundary
 
