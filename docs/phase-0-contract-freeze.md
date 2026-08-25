@@ -128,6 +128,35 @@ Runtime determines **when** an opportunity may be considered; Character cognitio
 
 See [`contracts/autonomy-policy-v1.md`](contracts/autonomy-policy-v1.md).
 
+### Autonomy Context and memory/evidence boundary
+
+Character autonomy receives a bounded **Autonomy Context Pack**, not unrestricted Local environment access.
+
+Allowed context is Deployment-scoped and may include:
+
+- current time, Presence, Activity Rhythm, autonomy suppression/budget;
+- relevant goals/interests and current Character Relay memory/evidence retrieval;
+- bounded recent relevant conversation and unresolved commitments;
+- recent verified Local activity summaries;
+- semantic available activities/targets and broad device availability/constraints.
+
+Excluded by default:
+
+- raw desktop/video/audio;
+- credentials/secrets;
+- unrelated files/windows;
+- low-level process/plugin internals;
+- other Deployment/Character private context;
+- private model chain-of-thought.
+
+Character cognition outputs only high-level preference such as activity, target preference, goal, duration preference, alternatives, and a concise reason summary. Device selection, lease arbitration, plugin/tool planning, and per-frame input remain Runtime/Adapter concerns.
+
+Verified Local outcomes may enter Character Relay Cloud's existing evidence/memory pipeline as bounded semantic summaries. Local does not directly write durable memory or personality.
+
+Repeated verified Character-initiated choices may become evidence considered by the current Character Relay pattern/insight/consolidation pipeline, but one or repeated farming runs do not directly set a durable preference. Owner-configured farming priorities remain user policy, not proof of Character preference.
+
+See [`contracts/autonomy-context-v1.md`](contracts/autonomy-context-v1.md).
+
 ### Human presence and Device availability
 
 The physical owner has priority over every Character for interactive desktop resources.
@@ -181,6 +210,34 @@ When multiple owner-authorized devices can satisfy an activity, deterministic se
 - Physical human ownership, human takeover, local safety policy, and explicit Stop always outrank model/agent intent.
 
 See [`contracts/execution-session-v1.md`](contracts/execution-session-v1.md).
+
+### Routine Game Automation v1
+
+Game control is deliberately narrower than "play the game autonomously."
+
+V1 product boundary:
+
+```text
+routine / maintenance / repeatable farming  -> potentially automatable
+story / event / first-time / exploration   -> human-only
+```
+
+Owner-approved Routine Catalog entries may include bounded daily maintenance, routine reward claiming, ordinary stamina/energy consumption on configured targets, and repeatable relic/artifact/material farming.
+
+Human-only v1 content includes story/campaign progression, character/story quests, limited/new events, first-time content, exploration/puzzles/treasure, meaningful dialogue choices, gacha/premium currency, purchases, destructive/account/security actions, and equivalent experiential/sensitive content.
+
+Unknown/novel content fails closed with a human-required outcome rather than letting the adapter improvise.
+
+Closed commercial games are not the first architecture proof. The owned/reference test environment must prove Plugin Host, Adapter Lab, input/capture, lease, cancellation, takeover, and deterministic-skill behavior first.
+
+After that proof, the first intended commercial adapters are:
+
+1. **Honkai: Star Rail** — menu/state-heavy, turn-based/repeatable routine validation;
+2. **Genshin Impact** — real-time 3D movement/visual-control validation for already-approved repeatable routines.
+
+Both adapters use the same Core/Plugin/Host boundaries and remain routine/farming-only in v1.
+
+See [`contracts/routine-game-automation-v1.md`](contracts/routine-game-automation-v1.md).
 
 ### Plugin and Adapter boundary
 
@@ -237,10 +294,12 @@ rather than continuously uploading desktop frames to Cloud. Raw-frame use by a C
 | --- | --- |
 | Owner / Character / Deployment semantics | `character-relay` current contracts/source |
 | Device ownership/access + autonomy admission | `character-relay` cloud product/runtime |
+| Bounded Autonomy Context + durable memory/evidence semantics | `character-relay` cloud, constrained by Local Phase 0 Autonomy Context contract |
 | Physical human/device availability enforcement | `character-relay-local` Local safety/device policy under accepted Autonomy contract |
 | Device transport schema | `character-relay-local` TypeSpec Device Protocol source + generated artifacts |
 | Local session / lease semantics | `character-relay-local` Execution Session contract |
 | Autonomy/resource scheduler semantics | Cloud admission follows `character-relay-local` Autonomy Policy contract until mirrored as cloud implementation contracts |
+| Routine game automation/content boundary | `character-relay-local` Routine Game Automation contract + owner Routine Catalog |
 | Plugin host permissions | `character-relay-local` Plugin Permission contract |
 | Portal authorization / Presence persistence | `character-relay` |
 | WebRTC media transport | Local + Portal implementation under cloud authorization |
@@ -259,12 +318,15 @@ Before Phase 1 implementation starts:
 - [x] Gaming represented as rich activity under availability Presence rather than a new enum.
 - [x] Autonomy modes, intent origins, Activity Rhythm, risk/admission policy recorded.
 - [x] Physical human priority + Local Device availability modes recorded.
+- [x] Bounded Autonomy Context + conservative verified outcome → evidence/preference semantics recorded.
 - [x] Deterministic multi-Character Resource Scheduler, device selection, and cooperative preemption recorded.
 - [x] Execution Lease and session ownership model drafted.
+- [x] Routine/farming-only game automation + human-only experiential content boundary recorded.
+- [x] First commercial adapters selected: Honkai: Star Rail + Genshin Impact after reference-environment proof.
 - [x] Plugin capability/permission/trust model drafted; Verified third-party deferred until real sandboxing.
 - [x] Runtime Agent vs Coding Agent boundary recorded.
 - [x] Direct WebRTC P2P + STUN/TURN Live Watch v1 and privacy boundaries recorded.
-- [ ] Companion `character-relay` roadmap references the same accepted Presence/activity, protocol, Device ownership, autonomy/scheduler/human-presence, Live Watch, and plugin-trust decisions.
+- [ ] Companion `character-relay` roadmap references the same accepted Presence/activity, protocol, Device ownership, autonomy/context/scheduler/human-presence, routine-game, Live Watch, and plugin-trust decisions.
 - [ ] Owner accepts the synchronized Phase 0 contract PR as a whole.
 
 Phase 1 must not start until the final two items are satisfied.
