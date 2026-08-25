@@ -326,7 +326,7 @@ Before Phase 1 implementation starts:
 - [x] Plugin capability/permission/trust model drafted; Verified third-party deferred until real sandboxing.
 - [x] Runtime Agent vs Coding Agent boundary recorded.
 - [x] Direct WebRTC P2P + STUN/TURN Live Watch v1 and privacy boundaries recorded.
-- [ ] Companion `character-relay` roadmap references the same accepted Presence/activity, protocol, Device ownership, autonomy/context/scheduler/human-presence, routine-game, Live Watch, and plugin-trust decisions.
+- [x] Companion `character-relay` PR #203 roadmap synchronized to the same accepted Presence/activity, protocol, Device ownership, autonomy/context/scheduler/human-presence, routine-game, Live Watch, and plugin-trust decisions.
 - [ ] Owner accepts the synchronized Phase 0 contract PR as a whole.
 
-Phase 1 must not start until the final two items are satisfied.
+Phase 1 must not start until the final item is satisfied, and implementation still requires a separate explicit promotion/start decision.
