@@ -2,7 +2,7 @@
 
 Status: **Phase 0 contract draft**
 
-This contract defines who may use a local execution surface, how a Character session progresses, and how local safety behaves across contention, cancellation, disconnect, and human takeover.
+This contract defines who may use a local execution surface, how a Character session progresses, and how local safety behaves across contention, cancellation, disconnect, human presence, and human takeover.
 
 ## 1. Identities
 
@@ -59,8 +59,8 @@ A session cannot call a Host Capability merely because the plugin exposes an MCP
 
 Authority order:
 
-1. explicit human Stop / Take Over;
-2. Local safety/permission policy;
+1. physical human/local owner control, explicit human Stop / Take Over;
+2. Local safety/permission/device-availability policy;
 3. cloud-authorized session/autonomy policy;
 4. Runtime Agent / deterministic skill intent;
 5. plugin implementation request.
@@ -75,13 +75,13 @@ A valid competing intent may be:
 - deferred while its validity window remains open;
 - expired when its validity window closes;
 - cooperatively preempted at a safe checkpoint when a higher-priority accepted intent requires the same exclusive resource;
-- denied when policy, permission, risk, or safety does not permit execution.
+- denied when policy, permission, risk, human-presence, device mode, or safety does not permit execution.
 
 Contention is not itself proof that an intent is forbidden. Likewise, priority does not grant permission that the intent did not already have.
 
 ### 4.1 Canonical origin priority for conflicting resources
 
-When two otherwise-valid intents require the same exclusive resource, scheduler priority is:
+Physical human/local-owner control and Local safety supersede Character scheduling. Among otherwise-valid Character/user intents requiring the same exclusive resource, scheduler priority is:
 
 ```text
 user_request
@@ -94,11 +94,11 @@ Within one priority class, implementation may consider age, explicit deadline, a
 
 ### 4.2 Cooperative preemption
 
-Higher priority does not normally mean arbitrary hard interruption.
+Higher Character/user priority does not normally mean arbitrary hard interruption.
 
 If the current session cannot safely release an exclusive lease immediately, Runtime requests preemption and waits for the adapter/skill to report the next safe checkpoint. At that checkpoint the current session pauses or stops, releases the resource, and the higher-priority session may acquire it.
 
-Immediate hard interruption is reserved for explicit human Stop/Take Over, Local safety/security enforcement, permission revocation, or equivalent emergency conditions.
+Immediate hard interruption is reserved for physical human takeover, explicit human Stop/Take Over, Local safety/security enforcement, permission revocation, device-mode restriction, or equivalent emergency conditions.
 
 Adapters that contain non-trivial atomic operations should expose bounded preemptibility/safe-checkpoint information rather than forcing the scheduler to infer it.
 
@@ -119,14 +119,14 @@ requested
 Semantics:
 
 - `requested` — cloud intent exists but Local has not accepted it.
-- `accepted` — Local validated device/session/plugin policy and reserved required startup resources.
+- `accepted` — Local validated current device/session/plugin/human-presence policy and reserved required startup resources.
 - `preparing` — target/plugin/runtime is being prepared; no claim of gameplay/task success.
 - `running` — the authorized session may execute bounded operations.
 - `paused` — leases may be retained according to policy, but no new side-effecting operation starts.
 - `stopping` — safe teardown is in progress.
 - terminal states release execution leases and stop side effects.
 
-A deferred autonomy/delegated intent is **not yet an Execution Session** merely because it is waiting for a lease. The Cloud scheduler may keep it as a bounded pending intent until admitted or expired.
+A deferred autonomy/delegated intent is **not yet an Execution Session** merely because it is waiting for a lease or suitable human/device availability. The Cloud scheduler may keep it as a bounded pending intent until admitted or expired.
 
 Terminal states are immutable for that `session_id`.
 
@@ -162,13 +162,18 @@ Stop
 Take Over
 ```
 
+Human takeover also includes credible physical keyboard/pointer activity detected while autonomous interactive input authority is armed.
+
 Human takeover:
 
 - prevents new autonomous side effects immediately;
-- transitions the session to `paused` or `stopping` according to the chosen action;
-- disarms autonomous input authority;
+- immediately disarms autonomous keyboard/pointer generation when the interactive desktop is being physically used;
+- transitions the session to `paused`, `interrupted`, or `stopping` according to Local safety and the current adapter safe boundary;
+- releases or safely unwinds the interactive input lease;
 - may create a bounded autonomy suppression under the Cloud Autonomy Policy so the same Character does not instantly recreate the stopped activity;
 - cannot be reversed remotely without a new local/session authorization boundary.
+
+Physical human input does not wait for Cloud or model approval before disarming automation.
 
 A Portal live viewer is read-only by default. Remote takeover/control is a separate future permission and is not part of v1.
 
@@ -188,6 +193,8 @@ On disconnect:
 
 There is no default "keep playing indefinitely while offline" behavior.
 
+Human takeover/device-mode changes still apply while Cloud is disconnected.
+
 ## 9. Resume policy
 
 Reconnect does not automatically mean resume.
@@ -200,23 +207,31 @@ Local reports active sessions, operations, and leases. Cloud reconciles Deployme
 - plugin/version is still compatible;
 - required permissions are still granted;
 - required leases are still valid/reacquirable;
+- Local device availability mode still permits continuation;
+- current human-presence/interactive-session evidence permits continuation where required;
 - Local safety policy permits continuation.
 
-A `session_recovery` intent competes for resources under the Autonomy Policy scheduler. Reconnection does not silently preempt a higher-priority explicit user request.
+A `session_recovery` intent competes for resources under the Autonomy Policy scheduler. Reconnection does not silently preempt physical human control or a higher-priority explicit user request.
 
 Otherwise the session stops safely.
 
-## 10. Target focus and desktop input
+## 10. Target focus, Windows session, and desktop input
 
 Generic desktop input is a high-risk exclusive resource.
+
+V1 interactive desktop control targets the current unlocked interactive Windows session. It does not assume background service-desktop or multi-user-session automation.
 
 For target-bound keyboard/pointer control:
 
 - the session must hold the relevant exclusive input lease;
 - the Host must verify the active/foreground target where the OS API permits reliable verification;
 - unexpected focus/target loss disarms or pauses input rather than sending events to an unrelated window;
+- Windows lock, sleep, interactive-user/session switch, or equivalent loss of safe interactive context disarms autonomous input and pauses/stops safely;
+- credible physical human keyboard/pointer input immediately revokes autonomous interactive use under the Human Takeover rule;
 - Adapter Lab manual input requires explicit time-bounded arming;
-- Runtime automation additionally requires plugin permission + session policy + lease.
+- Runtime automation additionally requires plugin permission + session policy + human/device availability + lease.
+
+Non-interactive/headless/API Execution Surfaces may continue while the owner uses the desktop when they do not conflict with an owner-held resource and all applicable policy remains valid.
 
 ## 11. Presence/activity projection
 
@@ -245,7 +260,7 @@ A session result may include bounded structured evidence such as:
 - start/end timestamps;
 - verified skill names and outcomes;
 - progress counters;
-- interruption/failure reason codes;
+- interruption/failure reason codes, including human takeover where appropriate;
 - sanitized adapter trace references.
 
 Do not promote raw desktop frames, credentials, unrelated window content, model reasoning, shadow intents, review proposals, or deferred/expired desires into durable Character evidence by default.
@@ -269,4 +284,6 @@ Ning -> exclusive desktop-input
 
 The second otherwise-valid intent is deferred/expired/preempted according to Autonomy Policy and safe-checkpoint rules rather than silently stealing control.
 
-A higher-priority explicit user request may cause cooperative preemption of a lower-priority autonomous session at a safe checkpoint. Human Stop/Take Over may interrupt immediately under local safety semantics.
+If the physical owner begins using keyboard/pointer input, both Character scheduler priority and any existing autonomous desktop-input lease yield to Local human takeover semantics.
+
+A higher-priority explicit user request may cause cooperative preemption of a lower-priority autonomous session at a safe checkpoint, but it does not silently seize an actively human-used desktop.
