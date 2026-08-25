@@ -11,7 +11,7 @@ This phase freezes the durable boundaries that implementation must follow. It do
 ### Product boundary
 
 - `character-relay` remains authoritative for owner/account authorization, Character Card and Deployment identity, Presence/availability, long-term Character memory/evidence, Portal authorization, autonomy admission, and durable session/result projection.
-- `character-relay-local` is an optional device execution node. It owns device identity, local connection/session mechanics, local observation and control, streaming, plugin lifecycle, Adapter Lab, Local safety enforcement, and optional local/coding-agent providers.
+- `character-relay-local` is an optional device execution node. It owns device identity, local connection/session mechanics, local observation and control, streaming, plugin lifecycle, Adapter Lab, Local safety enforcement, physical human/device-availability enforcement, and optional local/coding-agent providers.
 - Local is not a second Character Relay server and must not invent independent Character or Deployment identity.
 
 ### Initial platform and stack
@@ -128,11 +128,35 @@ Runtime determines **when** an opportunity may be considered; Character cognitio
 
 See [`contracts/autonomy-policy-v1.md`](contracts/autonomy-policy-v1.md).
 
+### Human presence and Device availability
+
+The physical owner has priority over every Character for interactive desktop resources.
+
+Each Local device has an owner-controlled availability mode:
+
+```text
+autonomy_allowed
+explicit_only
+do_not_use
+```
+
+The Local GUI is authoritative for this mode. Cloud/model reconnect or session recovery cannot silently widen it.
+
+V1 interactive control targets the current unlocked interactive Windows session. For keyboard/pointer/foreground-window autonomy:
+
+- configurable recent human activity may block a new autonomous session;
+- Windows lock/sleep/session switch/target loss disarms input;
+- credible physical human keyboard/pointer input immediately disarms autonomous input and triggers Local human-takeover semantics;
+- an explicit user request may preempt another Character according to policy, but does not silently seize an actively human-used desktop;
+- headless/API work may continue concurrently when it does not conflict with owner-held resources.
+
+Physical human/local-owner control and Local safety supersede the Character Resource Scheduler.
+
 ### Shared-device Resource Scheduler
 
 Characters never use an LLM to decide who wins a device conflict.
 
-For otherwise-valid intents contending for the same exclusive resource, canonical origin priority is:
+For otherwise-valid intents contending for the same exclusive resource, canonical Character/user origin priority is:
 
 ```text
 user_request
@@ -141,9 +165,11 @@ user_request
   > character_initiated
 ```
 
-Within the same class, deterministic age/deadline/fairness policy may apply. Character-initiated intents have bounded validity and do not remain forever queued behind an offline/busy device.
+Within the same class, deterministic age/deadline/fairness policy may apply. Character-initiated intents have bounded validity and do not remain forever queued behind an offline, human-active, or busy device.
 
-Higher-priority work normally uses **cooperative preemption** at adapter-declared safe checkpoints. Immediate hard interruption is reserved for human Stop/Take Over, Local safety/security enforcement, permission revocation, or equivalent emergency conditions.
+Higher-priority Character/user work normally uses **cooperative preemption** at adapter-declared safe checkpoints. Immediate hard interruption is reserved for physical human takeover, human Stop/Take Over, Local safety/security enforcement, permission revocation, device-mode restriction, or equivalent emergency conditions.
+
+When multiple owner-authorized devices can satisfy an activity, deterministic selection may consider device availability mode, online/safe state, installed target/plugin, required capabilities, resource contention, and activity-specific preferred-device ranking.
 
 ### Execution ownership
 
@@ -152,7 +178,7 @@ Higher-priority work normally uses **cooperative preemption** at adapter-declare
 - Side-effecting local resources are controlled through **Execution Leases**.
 - Exclusive resources such as desktop keyboard/pointer control may have only one active owner at a time.
 - Read-only resources such as capture may support shared-read leases when policy permits.
-- Human takeover, local safety policy, and explicit Stop always outrank model/agent intent.
+- Physical human ownership, human takeover, local safety policy, and explicit Stop always outrank model/agent intent.
 
 See [`contracts/execution-session-v1.md`](contracts/execution-session-v1.md).
 
@@ -211,6 +237,7 @@ rather than continuously uploading desktop frames to Cloud. Raw-frame use by a C
 | --- | --- |
 | Owner / Character / Deployment semantics | `character-relay` current contracts/source |
 | Device ownership/access + autonomy admission | `character-relay` cloud product/runtime |
+| Physical human/device availability enforcement | `character-relay-local` Local safety/device policy under accepted Autonomy contract |
 | Device transport schema | `character-relay-local` TypeSpec Device Protocol source + generated artifacts |
 | Local session / lease semantics | `character-relay-local` Execution Session contract |
 | Autonomy/resource scheduler semantics | Cloud admission follows `character-relay-local` Autonomy Policy contract until mirrored as cloud implementation contracts |
@@ -231,12 +258,13 @@ Before Phase 1 implementation starts:
 - [x] Owner-scoped Device + Deployment-bound session model recorded.
 - [x] Gaming represented as rich activity under availability Presence rather than a new enum.
 - [x] Autonomy modes, intent origins, Activity Rhythm, risk/admission policy recorded.
-- [x] Deterministic multi-Character Resource Scheduler and cooperative preemption recorded.
+- [x] Physical human priority + Local Device availability modes recorded.
+- [x] Deterministic multi-Character Resource Scheduler, device selection, and cooperative preemption recorded.
 - [x] Execution Lease and session ownership model drafted.
 - [x] Plugin capability/permission/trust model drafted; Verified third-party deferred until real sandboxing.
 - [x] Runtime Agent vs Coding Agent boundary recorded.
 - [x] Direct WebRTC P2P + STUN/TURN Live Watch v1 and privacy boundaries recorded.
-- [ ] Companion `character-relay` roadmap references the same accepted Presence/activity, protocol, Device ownership, autonomy/scheduler, Live Watch, and plugin-trust decisions.
+- [ ] Companion `character-relay` roadmap references the same accepted Presence/activity, protocol, Device ownership, autonomy/scheduler/human-presence, Live Watch, and plugin-trust decisions.
 - [ ] Owner accepts the synchronized Phase 0 contract PR as a whole.
 
 Phase 1 must not start until the final two items are satisfied.
