@@ -38,8 +38,10 @@ Define with the then-current Character Relay `main`:
 - Cloud ↔ Local protocol and versioning;
 - heartbeat, offline, reconnect, interruption, and resume semantics;
 - gaming/activity representation in existing Deployment Presence;
+- Local Autonomy Policy, Activity Rhythm, and risk/admission semantics;
+- multi-Character Resource Scheduler, Execution Lease, contention, and safe preemption;
 - live-view authorization and signaling contract;
-- plugin capability/permission model;
+- plugin capability/permission/trust model;
 - security threat model and explicit non-goals;
 - first supported desktop OS and packaging assumptions;
 - one source of truth for shared protocol schemas.
@@ -48,6 +50,8 @@ Gate:
 
 - the cloud and local repositories reference the same accepted contracts;
 - no implementation depends on an invented `gaming` Presence state or unversioned event shape;
+- Character autonomy cannot bypass deterministic admission or Local safety;
+- multiple Characters cannot silently steal the same exclusive execution resource;
 - input, capture, streaming, and plugin permissions have explicit authority owners.
 
 ### Phase 1 — Desktop shell + device pairing
@@ -98,13 +102,14 @@ Implement real-time media separately from control telemetry:
 - 720p30 baseline;
 - H.264 baseline codec;
 - hardware encoder discovery/fallback;
-- WebRTC publisher abstraction;
+- direct WebRTC P2P publisher abstraction;
+- STUN with TURN fallback;
 - authorization/signaling integration;
 - viewer-count-driven start/stop;
 - reconnect and stream teardown;
 - Local GUI preview and diagnostics.
 
-Keep agent observation independent from stream frame rate.
+Keep agent observation independent from stream frame rate. V1 does not record or persist Live Watch media.
 
 Gate:
 
@@ -139,6 +144,8 @@ Implement:
 - reference `test-environment` plugin;
 - protocol/version mismatch handling.
 
+V1 supports Official and explicitly enabled Developer plugins. Verified/untrusted third-party distribution remains deferred until a real OS/process sandbox is implemented and validated.
+
 Do not expose Local MCP servers directly to the Internet.
 
 Gate:
@@ -146,7 +153,8 @@ Gate:
 - Local discovers one reference plugin;
 - MCP tools can be listed and called locally;
 - plugin calls outside approved capability/permission scope are rejected;
-- plugin failure cannot take down the Local cloud connection.
+- plugin failure cannot take down the Local cloud connection;
+- the GUI does not misrepresent Host API permissions as a complete OS sandbox.
 
 ### Phase 5 — Adapter Lab GUI
 
@@ -206,7 +214,7 @@ Implement:
 - bounded VLM fallback for unknown states if needed;
 - local input controller;
 - high-frequency motor loop only where necessary;
-- timeout, cancel, failure, and safe-stop behavior.
+- timeout, cancel, failure, safe-checkpoint/preemption, and safe-stop behavior.
 
 Preferred tool granularity:
 
@@ -226,6 +234,7 @@ Gate:
 - the same bounded task succeeds repeatedly;
 - expected states and outcomes are verified rather than assumed;
 - cancel/emergency stop works during execution;
+- adapter exposes safe preemption checkpoints where the task cannot be interrupted arbitrarily;
 - adapter remains useful for Presence/Live Watch if control is disabled.
 
 ### Phase 7 — Character session execution
@@ -234,16 +243,20 @@ Connect the proven adapter to Character Relay orchestration:
 
 - receive authorized high-level task;
 - bind task to device + Deployment/session;
+- apply Cloud Autonomy Policy/admission for Character-initiated work;
+- acquire required Execution Leases through the deterministic Resource Scheduler;
 - emit structured progress;
 - execute local high-level skill;
-- handle cancel/interruption/resume;
+- handle defer/cancel/interruption/resume and cooperative preemption;
 - emit verified completion/result;
-- support owner takeover/stop;
+- support owner takeover/stop and autonomy suppression;
 - ensure stale device/session state cannot leave Portal permanently active.
 
 Gate:
 
 - L3 validation passes;
+- Character-initiated intents outside allowed Activity Rhythm windows cannot start;
+- conflicting exclusive-resource intents are deferred/expired/preempted according to policy rather than silently stealing control;
 - the Character can later describe only verified events from the session;
 - Local cannot widen Deployment/owner scope.
 
@@ -285,7 +298,7 @@ Gate:
 
 - enabling/disabling Local Agent does not change plugin contracts;
 - a task can fall back safely;
-- Local Agent cannot bypass plugin or input permissions.
+- Local Agent cannot bypass plugin, autonomy, risk, lease, or input permissions.
 
 ### Phase 9 — Coding Agent providers
 
@@ -342,7 +355,8 @@ After the runtime/SDK contracts prove stable:
 - core updater and rollback;
 - plugin install/update/rollback;
 - compatibility/version matrix;
-- Official / Verified / Developer trust levels;
+- Official / Developer trust levels for v1;
+- real sandbox requirement before introducing Verified/untrusted public plugins;
 - plugin SDK docs;
 - first-party adapter packaging independent from Local Core release;
 - commercial-game support matrix split into Presence / Integration / Visual Control.
@@ -373,10 +387,11 @@ A commercial-game adapter may remain Presence/Live-only even when the rest of th
 - headless remote runner infrastructure;
 - simulation-only Game Runner;
 - generic unrestricted desktop agent;
-- public plugin marketplace;
+- public plugin marketplace / Verified third-party plugins before real sandboxing;
 - automatic coding-agent merge/push;
 - direct cloud access to local MCP servers;
-- multi-OS parity before the first OS path is proven.
+- multi-OS parity before the first OS path is proven;
+- SFU/LiveKit transport unless multi-viewer/media-server requirements justify it.
 
 ## Start condition
 
