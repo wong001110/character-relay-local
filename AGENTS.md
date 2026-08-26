@@ -145,6 +145,91 @@ Keep these separate.
 
 Do not expose or persist private model chain-of-thought. Record action summaries, tool calls, test evidence, and code diffs.
 
+## Multi-agent development orchestration
+
+Use a **Main Agent + bounded Sub Agents** model for implementation work.
+
+### Main Agent responsibilities
+
+The Main Agent is the branch-level coordinator and owns:
+
+- reading the active plan and current contracts/source/tests before decomposition;
+- keeping the current phase scope coherent;
+- decomposing work into bounded, non-overlapping sub-tasks where parallelism is useful;
+- assigning Sub Agents explicit file/module/contract ownership;
+- integrating Sub Agent outputs and resolving cross-task conflicts;
+- making routine implementation decisions that do not change accepted architecture/security/product contracts;
+- running or commissioning the required validation gates;
+- deciding when a phase gate is satisfied from retained evidence;
+- advancing to the next normal phase without requiring owner approval for routine phase transitions;
+- escalating only decisions that materially change authority, product scope, security boundaries, or long-term architecture.
+
+The Main Agent must not mark a phase complete because Sub Agents report confidence. It must evaluate the actual tests/live evidence required by the phase gate.
+
+### Sub Agent responsibilities
+
+Sub Agents receive bounded tasks and should normally own one coherent concern, for example:
+
+```text
+protocol/schema task
+Electron/UI task
+Rust/native task
+Plugin Host task
+test-harness task
+Adapter investigation/implementation task
+review/verification task
+```
+
+A Sub Agent must:
+
+- stay inside the assigned scope;
+- read task-relevant contracts/source/tests before editing;
+- report changed files, tests/evidence, assumptions, and unresolved risks;
+- avoid broad refactors unless explicitly assigned;
+- avoid changing Phase 0 contracts, roadmap direction, or authority boundaries unless the Main Agent explicitly delegates a contract revision task;
+- never independently declare a phase advanced;
+- never bypass validation, permission, review, or merge boundaries.
+
+### Parallelism rules
+
+Parallel Sub Agents are appropriate when ownership is clearly separable, such as UI vs native capability work or implementation vs independent review.
+
+Do not parallelize overlapping edits to the same contract/module merely for speed. The Main Agent should serialize work when ordering or shared ownership would otherwise create merge ambiguity.
+
+When one task depends on another contract or artifact, finish/stabilize the upstream task first or give the dependent Sub Agent an explicit immutable interface snapshot.
+
+### Owner escalation policy
+
+Routine engineering choices stay with the Main Agent. Escalate to the owner when work would materially change any of the following:
+
+- accepted Phase 0 architecture or cross-repository authority;
+- security, privacy, permission, human-takeover, or sandbox boundaries;
+- product scope or autonomy behavior;
+- routine-only commercial-game policy;
+- a breaking Device Protocol or Plugin contract;
+- a major dependency/platform choice that creates substantial lock-in or operating cost;
+- a destructive migration or other high-impact irreversible decision;
+- merge to `main` when owner approval has not already been explicitly delegated.
+
+Examples that normally do **not** require owner escalation:
+
+- library choice inside an already accepted stack boundary;
+- internal file/class/function layout;
+- test implementation details;
+- small refactors needed by the current phase;
+- bug fixes that preserve contracts;
+- retry/backoff constants and similar tuning;
+- normal phase advancement after the documented gate passes.
+
+### Repository authority boundaries
+
+Main Agent coordination does not collapse repository authority boundaries.
+
+- Sub Agents may implement and validate on the active feature branch.
+- The Main Agent may integrate, commit, and push feature-branch work as permitted by the active plan.
+- `Promote/Accept`, `Commit`, `Push`, and `Merge` remain distinct actions.
+- No Sub Agent may independently push/merge `main` or bypass owner-required merge approval.
+
 ## Development workflow when implementation is explicitly started
 
 1. Re-read current `character-relay` `main`; do not assume the roadmap still matches current Presence/Portal/runtime types.
